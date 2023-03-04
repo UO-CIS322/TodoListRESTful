@@ -1,5 +1,5 @@
 """
-Web based to-do list.
+Web based to-do list with RESTful API.
 
 CS 322 - University of Oregon
 
@@ -7,35 +7,30 @@ Author: Ali Hassani
 """
 import os
 import logging
-
+import requests # The library we use to send requests to the API
+# Not to be confused with flask.request.
 import flask
 from flask import request
 
-from pymongo import MongoClient
-
 # Set up Flask app
 app = flask.Flask(__name__)
-app.debug = True
+app.debug = True if "DEBUG" not in os.environ else os.environ["DEBUG"]
+port_num = True if "PORT" not in os.environ else os.environ["PORT"]
 app.logger.setLevel(logging.DEBUG)
 
-# Set up MongoDB connection
-client = MongoClient('mongodb://' + os.environ['MONGODB_HOSTNAME'], 27017)
-
-# Use database "todo"
-db = client.todo
-
-# Use collection "lists" in the databse
-collection = db.lists
-
 
 ##################################################
-################ MongoDB Functions ############### 
+################### API Callers ################## 
 ##################################################
 
+API_ADDR = os.environ["API_ADDR"]
+API_PORT = os.environ["API_PORT"]
+API_URL = f"http://{API_ADDR}:{API_PORT}/api/"
 
 def get_todo():
     """
-    Obtains the newest document in the "lists" collection in database "todo".
+    Obtains the newest document in the "lists" collection in database
+    by calling the RESTful API.
 
     Returns title (string) and items (list of dictionaries) as a tuple.
     """
@@ -43,34 +38,22 @@ def get_todo():
     # Sort by primary key in descending order and limit to 1 document (row)
     # This will translate into finding the newest inserted document.
 
-    lists = collection.find().sort("_id", -1).limit(1)
+    lists = requests.get(f"{API_URL}/todolists").json()
 
-    # lists is a PyMongo cursor, which acts like a pointer.
-    # We need to iterate through it, even if we know it has only one entry:
-    for todo_list in lists:
-        # We store all of our lists as documents with two fields:
-        ## title: string # title of our to-do list
-        ## items: list   # list of items:
-
-        ### every item has two fields:
-        #### desc: string   # description
-        #### priority: int  # priority
-        return todo_list["title"], todo_list["items"]
+    # lists should be a list of dictionaries.
+    # we just need the last one:
+    todolist = lists[-1]
+    return todolist["title"], todolist["items"]
 
 
 def insert_todo(title, items):
     """
-    Inserts a new to-do list into the database "todo", under the collection "lists".
+    Inserts a new to-do list into the database by calling the API.
     
     Inputs a title (string) and items (list of dictionaries)
-
-    Returns the unique ID assigned to the document by mongo (primary key.)
     """
-    output = collection.insert_one({
-        "title": title,
-        "items": items})
-    _id = output.inserted_id # this is how you obtain the primary key (_id) mongo assigns to your inserted document.
-    return str(_id)
+    _id = requests.post(f"{API_URL}/todolists", json={"title": title, "items": items}).json()
+    return _id
 
 
 ##################################################
@@ -152,5 +135,4 @@ def fetch():
 
 
 if __name__ == "__main__":
-    print("Opening for global access on port 5000")
-    app.run(port=5000, host="0.0.0.0")
+    app.run(port=port_num, host="0.0.0.0")

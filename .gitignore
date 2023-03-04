@@ -1,3 +1,5 @@
+*.swp
+.env
 credentials.ini
 __pycache__/
 *.py[cod]

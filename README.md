@@ -1,18 +1,13 @@
 
-# Minimal web-based todo list
+# Minimal web-based todo list with a RESTful API
 
-This is an example that demonstrates how to loop through listed HTML elements with JQuery, and 
-how to send requests to flask that contain lists.
+This is based on the previous example, [TodoListApp](https://github.com/UO-CIS322/TodoListApp).
 
-In this example, you will see how to:
-
-* Send POST requests with AJAX,
-* Loop through multiple HTML input fields, collect their values, and store them in a Javascript dictionary,
-* Convert a Javascript dictionary to a JSON, and send it to a backend interface (Flask,)
-* Parse JSON input data in with Flask,
-* Loop through HTML input fields and update their values.
+It was literally written in the afternoon lab held on March 3rd 2023, so please watch that first if you have questions.
 
 ## Getting started
+
+Copy `.env-example` into `.env` (see Lab recording for details.)
 
 As long as you have Docker and compose set up, just do:
 
@@ -20,12 +15,29 @@ As long as you have Docker and compose set up, just do:
 docker compose up
 ```
 
-The default port is `5001`.
+The default port for the client service is `5002`, and `5001` for the API.
 You can modify it in `docker-compose.yml` or set up an override file.
 
+### API
+
+One resource: `todolists`:
+
+```
+/api/todolists
+```
+
+#### GET request
+Returns all to-do lists stored in the database.
+
+#### POST request
+Expects a JSON input with keys `title` and `items`, where `title` is a string, and `items` is a list of dictionaries with keys
+`description` and `priority`.
+
+Inserts input list into the database, returns primary key.
+
 ### Web service
-Just go to `localhost:5001` (if you're not running docker locally, replace `localhost` with the correct hostname, if you're not
-binding to port `5001`, replace that as well.)
+Just go to `localhost:5002` (if you're not running docker locally, replace `localhost` with the correct hostname, if you're not
+binding to port `5005`, replace that as well.)
 
 You should see a webpage that looks like the following:
 
